@@ -5,17 +5,9 @@ use zed_extension_api::{
     self as zed, serde_json, Command, ContextServerConfiguration, ContextServerId, Project, Result,
 };
 
-/// Upstream MCP server npm package name.
 const MCP_PACKAGE_NAME: &str = "chrome-devtools-mcp";
-
-/// Best-effort JS entrypoint within the installed npm package.
-///
-/// Note:
-/// - The upstream package uses `"bin": "./build/src/index.js"`.
-/// - Zed will install the package into the extension's working directory under `node_modules/`.
 const MCP_SERVER_ENTRYPOINT: &str = "node_modules/chrome-devtools-mcp/build/src/index.js";
 
-/// Chrome channel options matching upstream choices.
 #[derive(Debug, Clone, Deserialize, JsonSchema, Default, PartialEq)]
 #[serde(rename_all = "lowercase")]
 enum ChromeChannel {
@@ -37,149 +29,53 @@ impl ChromeChannel {
     }
 }
 
-/// Settings for this Zed context server wrapper.
-///
-/// This wrapper is intentionally thin: it ensures the upstream MCP server package is installed,
-/// then launches it over stdio.
-///
-/// The settings here are aligned with upstream `chrome-devtools-mcp` CLI options
-/// (see upstream `src/cli.ts`).
-///
-/// Anything not modeled can be passed through using `extra_args`.
+/// Settings mapped to upstream chrome-devtools-mcp CLI options.
+/// All settings are optional - Chrome launches automatically with sensible defaults.
 #[derive(Debug, Deserialize, JsonSchema, Default)]
 struct ChromeDevToolsMcpSettings {
-    // ─────────────────────────────────────────────────────────────────────────
     // Connection options
-    // ─────────────────────────────────────────────────────────────────────────
-    /// Upstream: `--autoConnect`
-    /// If true, automatically connects to a browser (Chrome 145+) running in the user data
-    /// directory identified by the channel param. Requires remote debugging being enabled
-    /// in Chrome at chrome://inspect/#remote-debugging.
-    /// Conflicts with: isolated, executable_path.
     #[serde(default)]
     auto_connect: Option<bool>,
-
-    /// Upstream: `--browserUrl` (alias `-u`)
-    /// Connect to a running, debuggable Chrome instance over HTTP.
-    /// Example: "http://127.0.0.1:9222"
-    /// Conflicts with: ws_endpoint.
     #[serde(default)]
     browser_url: Option<String>,
-
-    /// Upstream: `--wsEndpoint` (alias `-w`)
-    /// Connect to a running Chrome instance over WebSocket.
-    /// Example: "ws://127.0.0.1:9222/devtools/browser/<id>"
-    /// Conflicts with: browser_url.
     #[serde(default)]
     ws_endpoint: Option<String>,
-
-    /// Upstream: `--wsHeaders` (JSON string), only applies when `ws_endpoint` is set.
-    /// Custom headers for WebSocket connection.
-    /// Example: {"Authorization":"Bearer token"}
     #[serde(default)]
     ws_headers: Option<serde_json::Value>,
 
-    // ─────────────────────────────────────────────────────────────────────────
     // Chrome launch options
-    // ─────────────────────────────────────────────────────────────────────────
-    /// Upstream: `--headless`
-    /// Whether to run Chrome in headless (no UI) mode.
-    /// Default: false
     #[serde(default)]
     headless: Option<bool>,
-
-    /// Upstream: `--executablePath` (alias `-e`)
-    /// Path to a custom Chrome executable (only relevant if upstream launches Chrome).
-    /// Conflicts with: browser_url, ws_endpoint.
     #[serde(default)]
     executable_path: Option<String>,
-
-    /// Upstream: `--isolated`
-    /// If true, creates a temporary user-data-dir that is automatically cleaned up
-    /// after the browser is closed.
-    /// Conflicts with: auto_connect, user_data_dir.
     #[serde(default)]
     isolated: Option<bool>,
-
-    /// Upstream: `--userDataDir`
-    /// Path to the user data directory (profile) for Chrome.
-    /// Default: $HOME/.cache/chrome-devtools-mcp/chrome-profile$CHANNEL_SUFFIX_IF_NON_STABLE
-    /// Conflicts with: browser_url, ws_endpoint, isolated.
     #[serde(default)]
     user_data_dir: Option<String>,
-
-    /// Upstream: `--channel`
-    /// Specify a different Chrome channel that should be used.
-    /// Choices: stable, canary, beta, dev.
-    /// Default: stable (handled by upstream).
-    /// Conflicts with: browser_url, ws_endpoint, executable_path.
     #[serde(default)]
     channel: Option<ChromeChannel>,
-
-    /// Upstream: `--viewport`
-    /// Initial viewport size for Chrome instances started by the server.
-    /// Format: "WIDTHxHEIGHT" (e.g., "1280x720").
-    /// In headless mode, max size is 3840x2160px.
     #[serde(default)]
     viewport: Option<String>,
-
-    /// Upstream: `--chromeArg` (repeatable)
-    /// Additional arguments for Chrome (only applies when Chrome is launched by chrome-devtools-mcp).
     #[serde(default)]
     chrome_arg: Vec<String>,
 
-    // ─────────────────────────────────────────────────────────────────────────
     // Network options
-    // ─────────────────────────────────────────────────────────────────────────
-    /// Upstream: `--proxyServer`
-    /// Proxy server configuration for Chrome passed as --proxy-server when launching the browser.
-    /// See https://www.chromium.org/developers/design-documents/network-settings/ for details.
     #[serde(default)]
     proxy_server: Option<String>,
-
-    /// Upstream: `--acceptInsecureCerts`
-    /// If true, ignores errors relative to self-signed and expired certificates.
-    /// Use with caution.
     #[serde(default)]
     accept_insecure_certs: Option<bool>,
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Logging options
-    // ─────────────────────────────────────────────────────────────────────────
-    /// Upstream: `--logFile`
-    /// Path to a file to write debug logs to.
-    /// Set the env variable `DEBUG` to `*` to enable verbose logs.
-    /// Useful for submitting bug reports.
-    #[serde(default)]
-    log_file: Option<String>,
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Tool category options
-    // ─────────────────────────────────────────────────────────────────────────
-    /// Upstream: `--categoryEmulation`
-    /// Set to false to exclude tools related to emulation.
-    /// Default: true
+    // Tool categories (set to false to disable)
     #[serde(default)]
     category_emulation: Option<bool>,
-
-    /// Upstream: `--categoryPerformance`
-    /// Set to false to exclude tools related to performance.
-    /// Default: true
     #[serde(default)]
     category_performance: Option<bool>,
-
-    /// Upstream: `--categoryNetwork`
-    /// Set to false to exclude tools related to network.
-    /// Default: true
     #[serde(default)]
     category_network: Option<bool>,
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Passthrough
-    // ─────────────────────────────────────────────────────────────────────────
-    /// Extra arguments passed directly to the upstream MCP server process.
-    ///
-    /// Use this to pass any flags not modeled above or experimental options.
+    // Debugging
+    #[serde(default)]
+    log_file: Option<String>,
     #[serde(default)]
     extra_args: Vec<String>,
 }
@@ -200,10 +96,6 @@ impl ChromeDevToolsMcpExtension {
 
     fn build_upstream_args(settings: &ChromeDevToolsMcpSettings) -> Vec<String> {
         let mut args: Vec<String> = Vec::new();
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Connection options
-        // ─────────────────────────────────────────────────────────────────────
 
         if let Some(true) = settings.auto_connect {
             args.push("--autoConnect".to_string());
@@ -244,10 +136,6 @@ impl ChromeDevToolsMcpExtension {
                 }
             }
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Chrome launch options
-        // ─────────────────────────────────────────────────────────────────────
 
         if let Some(true) = settings.headless {
             args.push("--headless".to_string());
@@ -300,10 +188,6 @@ impl ChromeDevToolsMcpExtension {
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Network options
-        // ─────────────────────────────────────────────────────────────────────
-
         if let Some(proxy) = settings
             .proxy_server
             .as_ref()
@@ -318,10 +202,6 @@ impl ChromeDevToolsMcpExtension {
             args.push("--acceptInsecureCerts".to_string());
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Logging options
-        // ─────────────────────────────────────────────────────────────────────
-
         if let Some(log_file) = settings
             .log_file
             .as_ref()
@@ -331,11 +211,6 @@ impl ChromeDevToolsMcpExtension {
             args.push("--logFile".to_string());
             args.push(log_file.to_string());
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Tool category options
-        // Upstream defaults these to true, so we only pass --no-category-X when false
-        // ─────────────────────────────────────────────────────────────────────
 
         if let Some(false) = settings.category_emulation {
             args.push("--no-category-emulation".to_string());
@@ -349,11 +224,6 @@ impl ChromeDevToolsMcpExtension {
             args.push("--no-category-network".to_string());
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Passthrough
-        // ─────────────────────────────────────────────────────────────────────
-
-        // Finally, append user-provided args verbatim.
         args.extend(settings.extra_args.iter().cloned());
 
         args
