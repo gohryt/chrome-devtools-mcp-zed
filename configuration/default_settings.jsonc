@@ -1,0 +1,160 @@
+{
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Chrome DevTools MCP - Zed Context Server Settings
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // This extension launches the upstream `chrome-devtools-mcp` MCP server.
+  // Settings here map to upstream CLI options (see upstream src/cli.ts).
+  //
+  // Note: Some options conflict with each other (e.g., browser_url vs ws_endpoint).
+  // See comments for details.
+  //
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IMPORTANT: Linux Users
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // There is a known issue with puppeteer where it looks for Chrome's user data
+  // directory at $HOME/config instead of $HOME/.config when XDG_CONFIG_HOME is
+  // not set. To fix this, either:
+  //
+  // 1. Set XDG_CONFIG_HOME environment variable:
+  //    export XDG_CONFIG_HOME="$HOME/.config"
+  //
+  // 2. Or explicitly set user_data_dir below to your Chrome profile path:
+  //    - Stable:   ~/.config/google-chrome
+  //    - Beta:     ~/.config/google-chrome-beta
+  //    - Dev:      ~/.config/google-chrome-unstable
+  //    - Canary:   ~/.config/google-chrome-canary
+  //
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Connection options
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Upstream: --autoConnect
+  // If true, automatically connects to a browser (Chrome 145+) running in the
+  // user data directory identified by the channel param.
+  // Requires remote debugging enabled in Chrome at chrome://inspect/#remote-debugging.
+  // Conflicts with: isolated, executable_path
+  "auto_connect": null,
+
+  // Upstream: --browserUrl (-u)
+  // Connect to a running, debuggable Chrome instance via HTTP.
+  // Example: "http://127.0.0.1:9222"
+  // Conflicts with: ws_endpoint
+  "browser_url": null,
+
+  // Upstream: --wsEndpoint (-w)
+  // Connect to a running Chrome instance via WebSocket.
+  // Example: "ws://127.0.0.1:9222/devtools/browser/<id>"
+  // Conflicts with: browser_url
+  "ws_endpoint": null,
+
+  // Upstream: --wsHeaders
+  // Custom headers for WebSocket connection (JSON object).
+  // Only applies when ws_endpoint is set.
+  // Example: { "Authorization": "Bearer token" }
+  "ws_headers": null,
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Chrome launch options
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Upstream: --headless
+  // Whether to run Chrome in headless (no UI) mode.
+  // Default: false
+  "headless": null,
+
+  // Upstream: --executablePath (-e)
+  // Path to a custom Chrome executable.
+  // Only relevant when chrome-devtools-mcp launches Chrome.
+  // Conflicts with: browser_url, ws_endpoint
+  "executable_path": null,
+
+  // Upstream: --isolated
+  // If true, creates a temporary user-data-dir that is automatically
+  // cleaned up after the browser is closed.
+  // Conflicts with: auto_connect, user_data_dir
+  "isolated": null,
+
+  // Upstream: --userDataDir
+  // Path to the user data directory (profile) for Chrome.
+  // Conflicts with: browser_url, ws_endpoint, isolated
+  //
+  // Platform-specific default paths for Chrome Stable:
+  //   Linux:   ~/.config/google-chrome
+  //   macOS:   ~/Library/Application Support/Google/Chrome
+  //   Windows: %LOCALAPPDATA%\Google\Chrome\User Data
+  "user_data_dir": null,
+
+  // Upstream: --channel
+  // Chrome channel to use. Choices: "stable", "canary", "beta", "dev".
+  // Default: "stable" (handled by upstream)
+  // Conflicts with: browser_url, ws_endpoint, executable_path
+  "channel": null,
+
+  // Upstream: --viewport
+  // Initial viewport size for Chrome instances started by the server.
+  // Format: "WIDTHxHEIGHT" (e.g., "1280x720").
+  // In headless mode, max size is 3840x2160px.
+  "viewport": null,
+
+  // Upstream: --chromeArg (repeatable)
+  // Additional arguments for Chrome.
+  // Only applies when Chrome is launched by chrome-devtools-mcp.
+  // Example: ["--no-sandbox", "--disable-setuid-sandbox"]
+  "chrome_arg": [],
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Network options
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Upstream: --proxyServer
+  // Proxy server configuration for Chrome (passed as --proxy-server).
+  // See https://www.chromium.org/developers/design-documents/network-settings/
+  "proxy_server": null,
+
+  // Upstream: --acceptInsecureCerts
+  // If true, ignores errors for self-signed and expired certificates.
+  // Use with caution.
+  "accept_insecure_certs": null,
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Logging options
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Upstream: --logFile
+  // Path to a file to write debug logs to.
+  // Set env variable DEBUG=* to enable verbose logs.
+  // Useful for submitting bug reports.
+  "log_file": null,
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Tool category options
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Upstream: --categoryEmulation / --no-category-emulation
+  // Set to false to exclude tools related to emulation.
+  // Default: true
+  "category_emulation": null,
+
+  // Upstream: --categoryPerformance / --no-category-performance
+  // Set to false to exclude tools related to performance.
+  // Default: true
+  "category_performance": null,
+
+  // Upstream: --categoryNetwork / --no-category-network
+  // Set to false to exclude tools related to network.
+  // Default: true
+  "category_network": null,
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Passthrough
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Extra arguments passed verbatim to the upstream MCP server process.
+  // Use this for experimental flags or any options not modeled above.
+  // Example: ["--experimentalDevtools"]
+  "extra_args": [],
+}

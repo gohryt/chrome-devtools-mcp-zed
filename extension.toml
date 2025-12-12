@@ -1,0 +1,10 @@
+id = "chrome-devtools-mcp-zed"
+name = "Chrome DevTools MCP"
+description = "Model Context Server for Chrome DevTools MCP"
+version = "0.1.0"
+schema_version = 1
+authors = ["gohryt"]
+repository = "https://github.com/gohryt/chrome-devtools-mcp-zed"
+
+[context_servers.chrome-devtools-mcp-zed]
+name = "Chrome DevTools MCP"
