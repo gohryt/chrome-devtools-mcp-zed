@@ -12,7 +12,7 @@ A Zed extension that integrates the [Chrome DevTools MCP](https://github.com/Chr
 ## Prerequisites
 
 - [Zed](https://zed.dev/) editor
-- [Node.js](https://nodejs.org/) v20.19 or newer
+- [Node.js](https://nodejs.org/) v20 or newer
 - [Google Chrome](https://www.google.com/chrome/) (stable channel)
 
 ## Installation
@@ -194,7 +194,7 @@ chrome.exe --remote-debugging-port=9222 --user-data-dir=%TEMP%\chrome-debug
 ### Chrome doesn't launch
 
 - Ensure Google Chrome is installed
-- Check that Node.js v20.19+ is available
+- Check that Node.js v20+ is available
 - Try setting `executable_path` to your Chrome binary location
 
 ### Connection refused

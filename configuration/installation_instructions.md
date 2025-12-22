@@ -13,7 +13,7 @@
 
 ## Prerequisites
 
-- **Node.js** v20.19 or newer
+- **Node.js** v20 or newer
 - **Google Chrome** (stable channel recommended)
 
 ## Configuration (Optional)
