@@ -1,7 +1,7 @@
 id = "chrome-devtools-mcp"
 name = "Chrome DevTools MCP"
 description = "Model Context Server for Chrome DevTools MCP"
-version = "1.0.0"
+version = "1.0.1"
 schema_version = 1
 authors = ["Aleksandr Kosachev <gohryt@rays-of-good.online>"]
 repository = "https://github.com/gohryt/chrome-devtools-mcp-zed"
