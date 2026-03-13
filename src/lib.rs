@@ -6,7 +6,7 @@ use zed_extension_api::{
 };
 
 const MCP_PACKAGE_NAME: &str = "chrome-devtools-mcp";
-const MCP_SERVER_ENTRYPOINT: &str = "node_modules/chrome-devtools-mcp/build/src/index.js";
+const MCP_SERVER_ENTRYPOINT: &str = "node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js";
 
 #[derive(Debug, Clone, Deserialize, JsonSchema, Default, PartialEq)]
 #[serde(rename_all = "lowercase")]
